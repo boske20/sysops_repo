@@ -1,0 +1,17 @@
+---
+- name: configuring httpd for prestashop
+  file:
+     path: /etc/httpd/conf.d/{{ ansible_fqdn }}.conf
+     state: touch
+     mode: 0644
+     owner: root
+     group: root  
+
+- name: setting up httpd for prestashop
+  template:
+     src: templates/webserver_config_playbook.j2
+     dest: /etc/httpd/conf.d/{{ ansible_fqdn }}.conf
+     mode: 0644
+     owner: root
+     group: root
+   

@@ -1,0 +1,72 @@
+---
+- name: Installing Prestashop for GassedUp
+  hosts: all
+  become: true
+  remote_user: vagrant
+  vars:
+     mysql_password: Password1
+  tasks:
+   - name: Installing apache
+     yum:
+        name: httpd
+        state: present
+
+   - name: Installing mariadb
+     yum:
+        name: 
+         - mariadb-server
+         - python3-PyMySQL
+        state: present
+
+   - name: installing php and extensions
+     yum:
+        name:
+         - php
+         - php-spl
+         - php-hash
+         - php-ctype
+         - php-json
+         - php-mbstring
+         - php-zip
+         - php-gd
+         - php-curl
+         - php-xml
+         - php-common
+         - unzip
+        state: present
+
+   - name: downloading prestashop file
+     get_url:
+        url: https://download.prestashop.com/download/releases/prestashop_1.7.6.7.zip 
+        dest: /tmp/
+
+   - name: unzipping prestashop downloaded file
+     unarchive:
+        src: /tmp/prestashop_1.7.6.7.zip
+        dest: /var/www/html/
+        remote_src: yes
+        mode: 0775
+        owner: apache
+        group: apache
+
+   - name: starting mariadb service
+     service:
+        name: mariadb
+        enabled: true
+        state: started
+
+   - name: starting httpd service
+     service:
+        name: httpd
+        enabled: true
+        state: started
+
+   - name: mysql_root_password
+     mysql_user:
+        login_user: root
+        login_password: "{{ mysql_password }}"
+        name: root
+        host: localhost
+        check_implicit_admin: true
+        password: "{{ mysql_password }}"
+

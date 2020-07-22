@@ -1,0 +1,14 @@
+<VirtualHost *:80>
+   ServerAdmin webmaster@yourdomain.com
+   DocumentRoot "/var/www/html/"
+   ServerName {{ ansible_fqdn  }}
+   ErrorLog "/var/log/httpd/{{ ansible_fqdn  }}-error_log"
+   CustomLog "/var/log/httpd/{{ ansible_fqdn  }}-access_log" combined
+
+<Directory "/var/www/html/">
+   DirectoryIndex index.html index.php
+   Options FollowSymLinks
+   AllowOverride All
+   Require all granted
+</Directory>
+</VirtualHost>  

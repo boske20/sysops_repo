@@ -1,0 +1,107 @@
+---
+- name: Installing Prestashop for GassedUp
+  hosts: all
+  become: true
+  remote_user: vagrant
+  vars:
+     mysql_password: Password1
+     eth1: ansible_eth1.ipv4.address
+  tasks:
+   - name: Installing apache
+     yum:
+        name: httpd
+        state: present
+
+   - name: Installing mariadb
+     yum:
+        name: 
+         - mariadb-server
+         - python3-PyMySQL
+        state: present
+
+   - name: installing php and extensions
+     yum:
+        name:
+         - php
+         - php-spl
+         - php-hash
+         - php-ctype
+         - php-json
+         - php-mbstring
+         - php-zip
+         - php-gd
+         - php-curl
+         - php-xml
+         - php-common
+         - php-pdo
+         - unzip
+         - php-intl
+         - php-posix
+         - php-mysqlnd
+         - wget
+        state: present
+
+   - name: downloading prestashop file
+     get_url:
+        url: https://download.prestashop.com/download/releases/prestashop_1.7.6.7.zip 
+        dest: /tmp/
+
+   - name: unzipping prestashop downloaded file
+     unarchive:
+        src: /tmp/prestashop_1.7.6.7.zip
+        dest: /var/www/html/
+        remote_src: yes
+        mode: 0644
+        owner: apache
+        group: apache
+
+   - import_tasks: config_files/prestashop_httpd_setup.yml
+     notify: restart httpd
+
+   - name: Recursively change ownership of a directory
+     file:
+        path: /var/www/html/
+        state: directory
+        recurse: yes
+        mode: 0755
+        owner: apache
+        group: apache
+
+   - name: Put SELinux in permissive mode, logging actions that would be blocked.
+     selinux:
+        policy: targeted
+        state: permissive
+
+   - name: starting mariadb service
+     service:
+        name: mariadb
+        enabled: true
+        state: started
+
+   - name: starting httpd service
+     service:
+        name: httpd
+        enabled: true
+        state: started
+
+   - name: mysql_root_password
+     mysql_user:
+        login_user: root
+        login_password: "{{ mysql_password }}"
+        name: root
+        host: localhost
+        check_implicit_admin: true
+        password: "{{ mysql_password }}"
+
+   - name: Create a new database with name 'gasshop'
+     mysql_db:
+        login_user: root
+        login_password: "{{ mysql_password }}"
+        name: gasshop
+        state: present
+
+  handlers: 
+   - name: restart httpd
+     service:
+        name: httpd
+        state: restart
